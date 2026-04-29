@@ -12,7 +12,7 @@ app.use(express.json({ limit: '1mb' }));
 
 
 const PORT       = 8787;
-const API_KEY    = "AQUÍ_PON_UN_TOKEN_SEGURO"; 
+const API_KEY    = "0RVOGVNRECc7q2ut7XYeWDDBG9FVjUkCanNL0opxhiak91SjYqLH8uqf5JR+eEgu"; 
 
 const DB_USER    = "sa";
 const DB_PASS    = "ESCRIBE_AQUÍ_TU_CONTRASEÑA_DE_SA"; 
