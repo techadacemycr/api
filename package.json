@@ -1,0 +1,21 @@
+{
+  "name": "infor-bridge",
+  "version": "1.0.0",
+  "description": "API HTTPS local para SQL Server 2008 (Infor) — solo SELECT y UPDATE",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0 <21.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "helmet": "^7.2.0",
+    "morgan": "^1.10.0",
+    "mssql": "^10.0.4"
+  }
+}
