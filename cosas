@@ -11,3 +11,7 @@ Invoke-WebRequest -Uri "https://api.tsicr-api.uk/api/tables" -Headers @{"x-api-k
 Get-EventLog -LogName System -Source "Service Control Manager" -Newest 5 | Format-List TimeGenerated, EntryType, Message
 
 sc.exe qc cloudflared
+
+BINARY_PATH_NAME : "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+
+sc.exe config cloudflared binPath= "\"C:\Program Files (x86)\cloudflared\cloudflared.exe\" --config \"C:\Windows\System32\config\systemprofile\.cloudflared\config.yml\" tunnel run"
