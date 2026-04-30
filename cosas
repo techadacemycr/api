@@ -1,8 +1,14 @@
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel list
 
-Test-Path "C:\Users\administrator.TECHSHOPPCR\.cloudflared\config.yml"
+Test-Path "$env:USERPROFILE\.cloudflared\config.yml"
 Test-Path "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml"
-Test-Path "C:\ProgramData\.cloudflared\config.yml"
 
-# Ejemplo si está en ProgramData
-Get-Content "C:\ProgramData\.cloudflared\config.yml"
+# Copiar config y credenciales al perfil de SYSTEM
+Copy-Item "$env:USERPROFILE\.cloudflared" "C:\Windows\System32\config\systemprofile\.cloudflared" -Recurse -Force
+
+# Reiniciar el servicio
+Restart-Service cloudflared
+Start-Sleep -Seconds 5
+
+# Verificar conexiones
+& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel list
