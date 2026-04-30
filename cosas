@@ -11,3 +11,10 @@ Write-Host "=== últimas líneas del log de cloudflared ==="
 Get-Content C:\cloudflared\cloudflared.log -Tail 30
 
 & "C:\cloudflared\cloudflared.exe" tunnel list
+
+Get-ChildItem -Path C:\ -Filter "cloudflared.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+
+C:\nssm\win64\nssm.exe get cloudflared AppStdout
+C:\nssm\win64\nssm.exe get cloudflared AppStderr
+C:\nssm\win64\nssm.exe get cloudflared Application
+C:\nssm\win64\nssm.exe get cloudflared AppParameters
