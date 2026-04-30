@@ -1,14 +1,5 @@
-& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel list
+& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel info infor-bridge
 
-Test-Path "$env:USERPROFILE\.cloudflared\config.yml"
-Test-Path "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml"
+Get-Content "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml"
 
-# Copiar config y credenciales al perfil de SYSTEM
-Copy-Item "$env:USERPROFILE\.cloudflared" "C:\Windows\System32\config\systemprofile\.cloudflared" -Recurse -Force
-
-# Reiniciar el servicio
-Restart-Service cloudflared
-Start-Sleep -Seconds 5
-
-# Verificar conexiones
-& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel list
+Get-ChildItem "C:\Windows\System32\config\systemprofile\.cloudflared\"
