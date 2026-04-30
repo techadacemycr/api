@@ -7,3 +7,7 @@ Start-Sleep -Seconds 15
 Get-Service cloudflared
 
 Invoke-WebRequest -Uri "https://api.tsicr-api.uk/api/tables" -Headers @{"x-api-key"="0RVOGVNRECc7q2ut7XYeWDDBG9FVjUkCanNL0opxhiak91SjYqLH8uqf5JR+eEgu"} | Select-Object -ExpandProperty Content
+
+Get-EventLog -LogName System -Source "Service Control Manager" -Newest 5 | Format-List TimeGenerated, EntryType, Message
+
+sc.exe qc cloudflared
