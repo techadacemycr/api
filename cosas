@@ -1,5 +1,9 @@
+$cfgPath = "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml"
+$newCreds = "C:\Windows\System32\config\systemprofile\.cloudflared\ab58c896-a6fb-4f65-9e9d-0703f1ed96d9.json"
+
+(Get-Content $cfgPath) -replace 'credentials-file:.*', "credentials-file: $newCreds" | Set-Content $cfgPath
+
+Get-Content $cfgPath
+Restart-Service cloudflared
+Start-Sleep -Seconds 8
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel info infor-bridge
-
-Get-Content "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml"
-
-Get-ChildItem "C:\Windows\System32\config\systemprofile\.cloudflared\"
