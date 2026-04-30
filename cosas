@@ -1,5 +1,4 @@
-& "C:\Program Files (x86)\cloudflared\cloudflared.exe" --config "C:\Windows\System32\config\systemprofile\.cloudflared\config.yml" tunnel run infor-bridge
-
+taskkill /F /IM cloudflared.exe
 Start-Sleep -Seconds 5
 Get-Process cloudflared -ErrorAction SilentlyContinue
 
@@ -7,4 +6,4 @@ Start-Service cloudflared
 Start-Sleep -Seconds 15
 Get-Service cloudflared
 
-curl.exe -H "x-api-key: 0RVOGVNRECc7q2ut7XYeWDDBG9FVjUkCanNL0opxhiak91SjYqLH8uqf5JR+eEgu" https://api.tsicr-api.uk/api/tables
+Invoke-WebRequest -Uri "https://api.tsicr-api.uk/api/tables" -Headers @{"x-api-key"="0RVOGVNRECc7q2ut7XYeWDDBG9FVjUkCanNL0opxhiak91SjYqLH8uqf5JR+eEgu"} | Select-Object -ExpandProperty Content
