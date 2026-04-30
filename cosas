@@ -5,3 +5,9 @@ Write-Host "=== service-out.log ==="
 Get-Content C:\infor-bridge\service-out.log -Tail 20
 Write-Host "=== service-err.log ==="
 Get-Content C:\infor-bridge\service-err.log -Tail 20
+
+Get-Service cloudflared
+Write-Host "=== últimas líneas del log de cloudflared ==="
+Get-Content C:\cloudflared\cloudflared.log -Tail 30
+
+& "C:\cloudflared\cloudflared.exe" tunnel list
