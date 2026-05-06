@@ -1,3 +1,15 @@
+
+Paso 1 — Re-cargar variables (por si la sesión está fresca)
+$f = 'C:\infor-bridge\server.js'
+$c = Get-Content $f -Raw
+Esperás: nada (asignaciones silenciosas).
+
+Paso 2 — Backup con timestamp único
+$bak = "$f.bak-" + (Get-Date -Format 'yyyyMMdd-HHmmss')
+Copy-Item $f $bak
+"Backup creado: $bak"
+Esperás: te imprime la ruta del backup. Anotala mentalmente.
+
 Paso 3 — Verificar que NO esté ya (idempotencia)
 $c -match '(?s)ALLOWED_READ\s*=\s*\[[^\]]*UserDefinedFields'
 Esperás: False (la primera vez).
