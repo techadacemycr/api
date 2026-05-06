@@ -1,17 +1,65 @@
-taskkill /F /IM cloudflared.exe
-Start-Sleep -Seconds 5
-Get-Process cloudflared -ErrorAction SilentlyContinue
+$f = 'C:\infor-bridge\server.js'
+$bak = "$f.bak-" + (Get-Date -Format 'yyyyMMdd-HHmmss')
+Copy-Item $f $bak
+Write-Host "Backup: $bak" -ForegroundColor Cyan
 
-Start-Service cloudflared
-Start-Sleep -Seconds 15
-Get-Service cloudflared
+$c = Get-Content $f -Raw
+$changed = $false
 
-Invoke-WebRequest -Uri "https://api.tsicr-api.uk/api/tables" -Headers @{"x-api-key"="0RVOGVNRECc7q2ut7XYeWDDBG9FVjUkCanNL0opxhiak91SjYqLH8uqf5JR+eEgu"} | Select-Object -ExpandProperty Content
+if ($c -notmatch 'ALLOWED_READ\s*=\s*\[[^\]]*UserDefinedFields') {
+  $c = $c -replace '(ALLOWED_READ\s*=\s*\[\s*)', "`$1'UserDefinedFields', "
+  $changed = $true
+  Write-Host "+ ALLOWED_READ  -> UserDefinedFields agregada" -ForegroundColor Green
+} else {
+  Write-Host "= ALLOWED_READ  -> ya existia" -ForegroundColor Yellow
+}
 
-Get-EventLog -LogName System -Source "Service Control Manager" -Newest 5 | Format-List TimeGenerated, EntryType, Message
+if ($c -notmatch 'ALLOWED_WRITE\s*=\s*\[[^\]]*UserDefinedFields') {
+  $c = $c -replace '(ALLOWED_WRITE\s*=\s*\[\s*)', "`$1'UserDefinedFields', "
+  $changed = $true
+  Write-Host "+ ALLOWED_WRITE -> UserDefinedFields agregada" -ForegroundColor Green
+} else {
+  Write-Host "= ALLOWED_WRITE -> ya existia" -ForegroundColor Yellow
+}
 
-sc.exe qc cloudflared
+if ($changed) {
+  # PS 4.0 no tiene -NoNewline en Set-Content; usamos .NET para preservar
+  # el archivo exactamente como Node lo necesita (UTF-8 sin BOM, sin LF extra).
+  $utf8 = New-Object System.Text.UTF8Encoding $false
+  [System.IO.File]::WriteAllText($f, $c, $utf8)
 
-BINARY_PATH_NAME : "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+  Write-Host "Reiniciando InforBridge..." -ForegroundColor Yellow
+  Restart-Service InforBridge
+  Start-Sleep -Seconds 3
 
-sc.exe config cloudflared binPath= "\"C:\Program Files (x86)\cloudflared\cloudflared.exe\" --config \"C:\Windows\System32\config\systemprofile\.cloudflared\config.yml\" tunnel run"
+  $svc = Get-Service InforBridge
+  if ($svc.Status -eq 'Running') {
+    Write-Host ("OK - Servicio: " + $svc.Status) -ForegroundColor Green
+  } else {
+    Write-Host ("FALLO - Servicio: " + $svc.Status) -ForegroundColor Red
+  }
+  Get-Content C:\infor-bridge\service-out.log -Tail 10
+} else {
+  Write-Host "Sin cambios - no reinicio el servicio" -ForegroundColor Cyan
+}
+
+
+
+
+Lo que espero ver
+
+Backup: C:\infor-bridge\server.js.bak-20260505-203412
++ ALLOWED_READ  -> UserDefinedFields agregada
++ ALLOWED_WRITE -> UserDefinedFields agregada
+Reiniciando InforBridge...
+OK - Servicio: Running
+[ últimas 10 líneas del log con "Server listening on..." o equivalente ]
+
+
+
+
+$f = 'C:\infor-bridge\server.js'
+$latest = Get-ChildItem ($f + '.bak-*') | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+Copy-Item $latest.FullName $f -Force
+Restart-Service InforBridge; Start-Sleep -Seconds 3
+Get-Content C:\infor-bridge\service-out.log -Tail 5
