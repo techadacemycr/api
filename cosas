@@ -63,3 +63,42 @@ $latest = Get-ChildItem ($f + '.bak-*') | Sort-Object LastWriteTime -Descending 
 Copy-Item $latest.FullName $f -Force
 Restart-Service InforBridge; Start-Sleep -Seconds 3
 Get-Content C:\infor-bridge\service-out.log -Tail 5
+
+
+
+
+
+$f = 'C:\infor-bridge\server.js'
+
+# 1. ¿Existe el archivo?
+if (Test-Path $f) {
+  Write-Host "OK - Archivo existe: $f" -ForegroundColor Green
+} else {
+  Write-Host "FALLO - No existe: $f" -ForegroundColor Red
+}
+
+# 2. ¿Existe el servicio?
+$svc = Get-Service InforBridge -ErrorAction SilentlyContinue
+if ($svc) {
+  Write-Host ("OK - Servicio existe (status: " + $svc.Status + ")") -ForegroundColor Green
+} else {
+  Write-Host "FALLO - Servicio 'InforBridge' no existe" -ForegroundColor Red
+  Write-Host "Servicios con 'infor' o 'bridge' en el nombre:" -ForegroundColor Yellow
+  Get-Service | Where-Object { $_.Name -match 'infor|bridge' } | Format-Table Name, Status, DisplayName
+}
+
+# 3. ¿Existen los arrays con esos nombres?
+if (Test-Path $f) {
+  $c = Get-Content $f -Raw
+  if ($c -match 'ALLOWED_READ\s*=\s*\[')  { Write-Host "OK - ALLOWED_READ encontrado" -ForegroundColor Green }
+  else { Write-Host "FALLO - ALLOWED_READ no aparece en el archivo" -ForegroundColor Red }
+
+  if ($c -match 'ALLOWED_WRITE\s*=\s*\[') { Write-Host "OK - ALLOWED_WRITE encontrado" -ForegroundColor Green }
+  else { Write-Host "FALLO - ALLOWED_WRITE no aparece en el archivo" -ForegroundColor Red }
+
+  # Bonus: muestra cómo se ven actualmente las primeras 5 líneas alrededor de cada uno
+  Write-Host "`n--- Contexto ALLOWED_READ ---" -ForegroundColor Cyan
+  if ($c -match '(?s).{0,40}ALLOWED_READ\s*=\s*\[[^\]]{0,200}') { Write-Host $matches[0] }
+  Write-Host "`n--- Contexto ALLOWED_WRITE ---" -ForegroundColor Cyan
+  if ($c -match '(?s).{0,40}ALLOWED_WRITE\s*=\s*\[[^\]]{0,200}') { Write-Host $matches[0] }
+}
