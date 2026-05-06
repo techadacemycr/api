@@ -1,31 +1,56 @@
-1. Definir la variable
-$f = 'C:\infor-bridge\server.js'
-Esperás: nada (solo vuelve el prompt).
+Paso 3 — Verificar que NO esté ya (idempotencia)
+$c -match '(?s)ALLOWED_READ\s*=\s*\[[^\]]*UserDefinedFields'
+Esperás: False (la primera vez).
 
-2. ¿Existe el archivo?
-Test-Path $f
-Esperás: True
+Si saliera True, ya está agregada. Para Ctrl+C y avisame.
 
-3. ¿Existe el servicio?
-Get-Service InforBridge
-Esperás: una tabla con Status: Running y Name: InforBridge. Si dice "Cannot find any service" → mandame foto.
+Paso 4 — Insertar UserDefinedFields en ALLOWED_READ
+$c = $c -replace '(ALLOWED_READ\s*=\s*\[\s*)', "`$1'UserDefinedFields', "
+Esperás: nada (asignación silenciosa, modificación solo en memoria, archivo intacto todavía).
 
-4. Cargar el contenido del archivo
-$c = Get-Content $f -Raw
-Esperás: nada (solo vuelve el prompt).
-
-5. ¿Existe el array ALLOWED_READ?
-$c -match 'ALLOWED_READ\s*=\s*\['
-Esperás: True
-
-6. ¿Existe el array ALLOWED_WRITE?
-$c -match 'ALLOWED_WRITE\s*=\s*\['
-Esperás: True
-
-7. Ver cómo está hoy el array ALLOWED_READ
+Paso 5 — Sanity check ANTES de guardar
 [regex]::Match($c, '(?s).{0,40}ALLOWED_READ\s*=\s*\[[^\]]{0,200}').Value
-Esperás: ver algo como const ALLOWED_READ = ['item', 'vendor', ...]. Esto me dice qué tablas ya tiene y confirma el formato.
+🛑 Pará y mirá el output. Tiene que verse algo como:
 
-8. Ver cómo está hoy el array ALLOWED_WRITE
-[regex]::Match($c, '(?s).{0,40}ALLOWED_WRITE\s*=\s*\[[^\]]{0,200}').Value
-Esperás: similar al 7 pero con WRITE.
+const ALLOWED_READ = ['UserDefinedFields', "itemvend", "jobmatl", ...
+✅ Si 'UserDefinedFields' aparece al inicio del array → continúa al paso 6.
+❌ Si NO aparece o se ve raro (truncado, mal formateado) → escribime Ctrl+C, no guardes nada y me mandás foto. Tu archivo en disco sigue intacto porque solo modificamos $c en memoria.
+
+Paso 6 — Guardar al disco (UTF-8 sin BOM)
+$utf8 = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($f, $c, $utf8)
+"Archivo guardado"
+Esperás: el mensaje "Archivo guardado".
+
+Paso 7 — Reiniciar el servicio
+Restart-Service InforBridge
+Esperás: nada (puede tardar 1-3 segundos).
+
+Start-Sleep -Seconds 3
+Paso 8 — Verificar que arrancó OK
+Get-Service InforBridge
+Esperás: tabla con Status: Running.
+
+🛑 Si dice Stopped o StartPending después de los 3 segundos → algo se rompió, ver el log y rollback.
+
+Paso 9 — Ver el log del servicio
+Get-Content C:\infor-bridge\service-out.log -Tail 10
+Esperás: las últimas 10 líneas. Buscás algo tipo Server listening on port o equivalente. No debería haber un stack trace de Node con SyntaxError o similar.
+
+Verificación final desde TechShop
+Cuando completes los 9 pasos sin error, andá al panel de TechShop:
+
+http://localhost:5173/app/admin/infor
+En la consola SELECT del panel, ejecutá:
+
+SELECT TOP 1 * FROM UserDefinedFields
+Si te trae filas → terminado. La tabla está habilitada y, además, el motivoSolicitud en los detalles de Gerencia/Solicitudes va a empezar a poblarse con los comentarios del solicitante en INFOR.
+
+Rollback — solo si Paso 8 dice algo distinto a Running
+Copy-Item $bak $f -Force
+Restart-Service InforBridge
+Start-Sleep -Seconds 3
+Get-Service InforBridge
+(El $bak queda en memoria de la sesión actual; si cerraste la PowerShell entre medio, reemplazá $bak por la ruta exacta que te imprimió el Paso 2.)
+
+Avanzá hasta el Paso 5 y mandame foto del output. Con eso confirmo que el insert quedó perfecto y das luz verde al Paso 6.
